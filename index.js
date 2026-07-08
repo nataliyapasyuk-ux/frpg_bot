@@ -11,13 +11,15 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-// Отдельный бот под generic-плагин ("market") — НЕ nota/feels/bar/kings бот.
-// Создать через @BotFather, вписать токен сюда или в env на bothost.
+// Один бот под generic-плагин ("market") на ВСЕ форумы хаба — НЕ nota/feels/
+// bar/kings бот, и НЕ привязан к одному конкретному форуму (в отличие от
+// v1). forum_id при привязке (/start <token>) резолвится сервером по
+// глобально уникальному tg_tokens.token — сюда прокидывать forum_prefix
+// не нужно вообще.
 // ВНИМАНИЕ: не коммитить реальный токен в публичный репозиторий.
 const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "REPLACE_BOT_TOKEN";
-const EXPECTED_SECRET = process.env.SECRET_KEY || "REPLACE_SERVER_SECRET"; // = forums.server_secret в notify_market
+const EXPECTED_SECRET = process.env.SECRET_KEY || "REPLACE_HUB_BOT_SECRET"; // = $HUB_BOT_SECRET в notify.php (НЕ forums.server_secret конкретного форума)
 const VPS_NOTIFY_URL = process.env.VPS_NOTIFY_URL || "https://notahub.ru/market-notify/notify.php";
-const FORUM_PREFIX = process.env.FORUM_PREFIX || "market1";
 
 // ==========================================
 // 1. СЛУШАЕМ КОМАНДЫ ОТ ТЕЛЕГРАМА (WEBHOOK)
@@ -42,8 +44,7 @@ app.post('/tg-webhook', async (req, res) => {
                     secret: EXPECTED_SECRET,
                     action: 'exchange_tg_token',
                     token: token,
-                    telegram_id: chatId,
-                    forum_prefix: FORUM_PREFIX
+                    telegram_id: chatId
                 })
             });
 
@@ -113,4 +114,4 @@ app.post('/notify', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`Market-notify бот запущен на порту ${PORT} (forum_prefix=${FORUM_PREFIX})`));
+app.listen(PORT, () => console.log(`Market-notify бот запущен на порту ${PORT} (общий на все форумы хаба)`));
